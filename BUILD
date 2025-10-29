@@ -2816,6 +2816,8 @@ perfetto_filegroup(
         "src/trace_processor/importers/ftrace/generic_ftrace_tracker.h",
         "src/trace_processor/importers/ftrace/gpu_work_period_tracker.cc",
         "src/trace_processor/importers/ftrace/gpu_work_period_tracker.h",
+        "src/trace_processor/importers/ftrace/gpuvis_tracker.cc",
+        "src/trace_processor/importers/ftrace/gpuvis_tracker.h",
         "src/trace_processor/importers/ftrace/iostat_tracker.cc",
         "src/trace_processor/importers/ftrace/iostat_tracker.h",
         "src/trace_processor/importers/ftrace/mali_gpu_event_tracker.cc",

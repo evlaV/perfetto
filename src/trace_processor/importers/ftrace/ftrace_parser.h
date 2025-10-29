@@ -36,6 +36,7 @@
 #include "src/trace_processor/importers/ftrace/ftrace_descriptors.h"
 #include "src/trace_processor/importers/ftrace/generic_ftrace_tracker.h"
 #include "src/trace_processor/importers/ftrace/gpu_work_period_tracker.h"
+#include "src/trace_processor/importers/ftrace/gpuvis_tracker.h"
 #include "src/trace_processor/importers/ftrace/iostat_tracker.h"
 #include "src/trace_processor/importers/ftrace/mali_gpu_event_tracker.h"
 #include "src/trace_processor/importers/ftrace/pixel_display_tracker.h"
@@ -380,6 +381,7 @@ class FtraceParser {
   VirtioGpuTracker virtio_gpu_tracker_;
   VirtioVideoTracker virtio_video_tracker_;
   PixelDisplayTracker pixel_display_tracker_;
+  GpuvisTracker gpuvis_tracker_;
 
   const StringId sched_wakeup_name_id_;
   const StringId sched_waking_name_id_;
