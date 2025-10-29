@@ -435,6 +435,7 @@ FtraceParser::FtraceParser(TraceProcessorContext* context,
       v4l2_tracker_(context),
       virtio_gpu_tracker_(context),
       virtio_video_tracker_(context),
+      gpuvis_tracker_(context),
       sched_wakeup_name_id_(context->storage->InternString("sched_wakeup")),
       sched_waking_name_id_(context->storage->InternString("sched_waking")),
       cpu_id_(context->storage->InternString("cpu")),
@@ -1648,6 +1649,10 @@ void FtraceParser::ParseLegacyGenericFtrace(int64_t ts,
                                             uint32_t cpu,
                                             uint32_t tid,
                                             ConstBytes blob) {
+  if (gpuvis_tracker_.TryParseGenericEvent(ts, cpu, tid, blob)) {
+    return;
+  }
+
   protos::pbzero::GenericFtraceEvent::Decoder evt(blob);
   StringId event_id = context_->storage->InternString(evt.event_name());
   UniqueTid utid = context_->process_tracker->GetOrCreateThread(tid);
@@ -1927,6 +1932,10 @@ void FtraceParser::ParsePrint(int64_t timestamp,
   }
 
   protos::pbzero::PrintFtraceEvent::Decoder evt(blob);
+  if (gpuvis_tracker_.TryParsePrintEvent(timestamp, pid, evt.buf())) {
+    return;
+  }
+
   SystraceParser::GetOrCreate(context_)->ParsePrintEvent(timestamp, pid,
                                                          evt.buf());
 }

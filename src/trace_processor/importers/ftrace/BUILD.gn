@@ -62,6 +62,8 @@ source_set("full") {
     "virtio_gpu_tracker.h",
     "virtio_video_tracker.cc",
     "virtio_video_tracker.h",
+    "gpuvis_tracker.cc",
+    "gpuvis_tracker.h",
   ]
   deps = [
     ":ftrace_descriptors",

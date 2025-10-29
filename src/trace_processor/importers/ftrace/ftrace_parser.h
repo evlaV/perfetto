@@ -45,6 +45,7 @@
 #include "src/trace_processor/importers/ftrace/v4l2_tracker.h"
 #include "src/trace_processor/importers/ftrace/virtio_gpu_tracker.h"
 #include "src/trace_processor/importers/ftrace/virtio_video_tracker.h"
+#include "src/trace_processor/importers/ftrace/gpuvis_tracker.h"
 #include "src/trace_processor/importers/i2c/i2c_tracker.h"
 #include "src/trace_processor/importers/proto/packet_sequence_state_generation.h"
 #include "src/trace_processor/storage/trace_storage.h"
@@ -369,6 +370,7 @@ class FtraceParser {
   V4l2Tracker v4l2_tracker_;
   VirtioGpuTracker virtio_gpu_tracker_;
   VirtioVideoTracker virtio_video_tracker_;
+  GpuvisTracker gpuvis_tracker_;
 
   const StringId sched_wakeup_name_id_;
   const StringId sched_waking_name_id_;
