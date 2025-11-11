@@ -118,7 +118,7 @@ const CSP_WS_PERMISSIVE_PORT = featureFlags.register({
     'Allows simultaneous usage of several trace_processor_shell ' +
     '-D --http-port 1234 by opening ' +
     'https://ui.perfetto.dev/#!/?rpc_port=1234',
-  defaultValue: false,
+  defaultValue: true,
 });
 
 function routeChange(route: Route) {
@@ -172,7 +172,7 @@ function setupContentSecurityPolicy() {
     'object-src': ['none'],
     'connect-src': [
       `'self'`,
-      'ws://127.0.0.1:8037', // For the adb websocket server.
+      'ws:', // For the adb websocket server.
       'https:', // Allow any HTTPS; service worker firewall adds granular filtering.
       'blob:',
       'data:',
