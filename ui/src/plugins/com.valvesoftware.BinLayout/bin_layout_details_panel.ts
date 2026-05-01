@@ -11,17 +11,19 @@ import {Button} from '../../widgets/button';
 import {Trace} from '../../public/trace';
 import {TrackEventDetailsPanel} from '../../public/details_panel';
 import {TrackEventSelection} from '../../public/selection';
-import {QueryResult, STR} from '../../trace_processor/query_result';
+import {QueryResult, NUM, STR} from '../../trace_processor/query_result';
 import {Rect2D, Size2D, Point2D} from '../../base/geom';
 import {download} from '../..//base/download_utils';
 
-function extractNumbers(str: string): number[] {
-  const matches = str.match(/\d+(\.\d+)?/g);
-  return matches
-    ? matches.map((v) => {
-        return Math.floor(Number(v));
-      })
-    : [];
+import {z} from 'zod';
+
+enum FormatVersion {
+  /* This was the initial format used for the bin layout data where multiple
+   * keys were used for each bin property.
+   */
+  ALPHA_VERSION = 0,
+  /* All bin layout data was serialized into JSON into a 'binInfo'. */
+  JSON_VERSION = 1,
 }
 
 interface BinningProperties {
@@ -89,7 +91,30 @@ class BinLayoutInfo {
   viewports: Array<Rect2D>;
   scissors: Array<Rect2D>;
 
-  constructor(args: BinLayoutInfoArgs) {
+  private static readonly ZPoint2D = z.object({x: z.number(), y: z.number()});
+  private static readonly ZSize2D = z.object({
+    width: z.number(),
+    height: z.number(),
+  });
+  private static readonly ZPointAndSize2D = z.object({
+    x: z.number(),
+    y: z.number(),
+    width: z.number(),
+    height: z.number(),
+  });
+  private static readonly ZBinInfoSchema = z.object({
+    version: z.number(),
+    fbSize: BinLayoutInfo.ZSize2D,
+    binSize: BinLayoutInfo.ZSize2D,
+    viewCount: z.number(),
+    viewports: z.array(BinLayoutInfo.ZPointAndSize2D),
+    scissors: z.array(BinLayoutInfo.ZPointAndSize2D),
+    binCoordinates: z.array(BinLayoutInfo.ZPointAndSize2D),
+    perViewFDMScale: z.array(z.array(BinLayoutInfo.ZSize2D)),
+    perViewBinOffset: z.array(BinLayoutInfo.ZPoint2D).optional(),
+  });
+
+  private constructor(args: BinLayoutInfoArgs) {
     this.fbSize = args.fbSize;
     this.binSize = args.binSize;
     this.binCoordinates = args.binCoordinates;
@@ -100,20 +125,10 @@ class BinLayoutInfo {
     this.scissors = args.scissors;
   }
 
-  public static empty(): BinLayoutInfo {
-    return new this({
-      fbSize: {width: 0, height: 0},
-      binSize: {width: 0, height: 0},
-      binCoordinates: [],
-      viewCount: 0,
-      perViewFDMScale: [],
-      perViewBinOffset: [],
-      viewports: [],
-      scissors: [],
-    });
-  }
-
-  public static async fromSliceId(
+  /**
+   * @deprecated ALPHA_VERSION support.
+   */
+  public static async fromSliceIdOld(
     trace: Trace,
     sliceId: number,
   ): Promise<BinLayoutInfo> {
@@ -132,7 +147,19 @@ class BinLayoutInfo {
     return binLayoutInfoQuery.then((r) => BinLayoutInfo.query_table_to_json(r));
   }
 
+  /**
+   * @deprecated ALPHA_VERSION support.
+   */
   private static query_table_to_json(query: QueryResult) {
+    function extractNumbers(str: string): number[] {
+      const matches = str.match(/\d+(\.\d+)?/g);
+      return matches
+        ? matches.map((v) => {
+            return Math.floor(Number(v));
+          })
+        : [];
+    }
+
     const it = query.iter({
       key: STR,
       string_value: STR,
@@ -238,6 +265,75 @@ class BinLayoutInfo {
       binCoordinates,
       viewCount,
       perViewFDMScale,
+      perViewBinOffset,
+      viewports,
+      scissors,
+    });
+  }
+
+  public static async fromSliceId(
+    trace: Trace,
+    sliceId: number,
+  ): Promise<BinLayoutInfo> {
+    const binLayoutInfoQuery = trace.engine.query(`
+        SELECT args.string_value
+        FROM args JOIN slice ON slice.arg_set_id=args.arg_set_id
+        WHERE slice.id=${sliceId} AND args.key='binInfo'
+      `);
+
+    return binLayoutInfoQuery.then((q) => BinLayoutInfo.queryParseFromJson(q));
+  }
+
+  private static queryParseFromJson(query: QueryResult) {
+    const json = query.firstRow({string_value: STR});
+    const parsed = BinLayoutInfo.ZBinInfoSchema.parse(
+      JSON.parse(json.string_value),
+    );
+
+    if (parsed.viewCount < 1) {
+      throw new Error('There should be at least 1 view');
+    }
+
+    const perViewBinOffset: Array<Point2D> =
+      parsed.perViewBinOffset !== undefined ? parsed.perViewBinOffset : [];
+
+    if (parsed.version != 1) {
+      alert('BinInfo data version unsupported. Something might break.');
+    }
+
+    /* Note: if fdm_offset isn't used we don't have and perViewBinOffset */
+    if (
+      perViewBinOffset.length > 0 &&
+      perViewBinOffset.length != parsed.viewCount
+    ) {
+      throw new Error("perViewBinOffset doesn't have offsets for all views");
+    }
+
+    if (
+      parsed.viewports.length != 1 &&
+      parsed.viewports.length != parsed.viewCount
+    ) {
+      throw new Error(
+        'There should be 1 viewport or a viewport for all views.',
+      );
+    }
+
+    if (
+      parsed.scissors.length != 1 &&
+      parsed.scissors.length != parsed.viewCount
+    ) {
+      throw new Error(
+        'There should be 1 scissors or a scissors for all views.',
+      );
+    }
+
+    const binCoordinates = parsed.binCoordinates.map(Rect2D.fromPointAndSize);
+    const viewports = parsed.viewports.map(Rect2D.fromPointAndSize);
+    const scissors = parsed.scissors.map(Rect2D.fromPointAndSize);
+
+    return new BinLayoutInfo({
+      ...parsed,
+      binCoordinates,
       perViewBinOffset,
       viewports,
       scissors,
@@ -782,17 +878,41 @@ export class BinLayoutSliceDetailsPanel implements TrackEventDetailsPanel {
     private layoutInfo: BinLayoutInfo | null = null,
   ) {}
 
+  /* TODO: We could get the version on trace load in index.ts but we'll be
+   * removing the code at some point anyway.
+   */
+  private static async getVersion(t: Trace): Promise<FormatVersion> {
+    const versionQuery = t.engine.query(`
+      SELECT EXISTS(SELECT 1 FROM args WHERE key='binInfo') AS value
+    `);
+
+    const row = (await versionQuery).firstRow({value: NUM});
+    return row.value as FormatVersion;
+  }
+
   async load(selection: TrackEventSelection): Promise<void> {
     if (selection.kind != 'track_event') return;
 
     this.slice_id = selection.eventId;
 
-    return BinLayoutInfo.fromSliceId(this.trace, this.slice_id).then(
-      (layout) => {
-        this.layoutInfo = layout;
-        return;
-      },
-    );
+    return BinLayoutSliceDetailsPanel.getVersion(this.trace).then((version) => {
+      switch (version) {
+        case FormatVersion.ALPHA_VERSION:
+          return BinLayoutInfo.fromSliceIdOld(this.trace, this.slice_id).then(
+            (layout) => {
+              this.layoutInfo = layout;
+              return;
+            },
+          );
+        case FormatVersion.JSON_VERSION:
+          return BinLayoutInfo.fromSliceId(this.trace, this.slice_id).then(
+            (layout) => {
+              this.layoutInfo = layout;
+              return;
+            },
+          );
+      }
+    });
   }
 
   render() {
