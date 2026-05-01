@@ -117,7 +117,7 @@ class BinLayoutInfo {
     trace: Trace,
     sliceId: number,
   ): Promise<BinLayoutInfo> {
-    const bin_layout_info_query = trace.engine.query(`
+    const binLayoutInfoQuery = trace.engine.query(`
         SELECT key, string_value
         FROM args JOIN slice ON slice.arg_set_id=args.arg_set_id
         WHERE slice.id=${sliceId} AND
@@ -129,9 +129,7 @@ class BinLayoutInfo {
                args.key LIKE 'scissors[_%]')
       `);
 
-    return bin_layout_info_query.then((r) =>
-      BinLayoutInfo.query_table_to_json(r),
-    );
+    return binLayoutInfoQuery.then((r) => BinLayoutInfo.query_table_to_json(r));
   }
 
   private static query_table_to_json(query: QueryResult) {
@@ -152,19 +150,19 @@ class BinLayoutInfo {
 
     for (; it.valid(); it.next()) {
       const literals = it.key.split('[');
-      const arr_name = literals[0];
+      const arrName = literals[0];
 
-      let arr_idx: number | undefined = undefined;
+      let arrIdx: number | undefined = undefined;
       if (literals[1] !== undefined) {
-        arr_idx = parseInt(literals[1].slice(0, -1));
+        arrIdx = parseInt(literals[1].slice(0, -1));
       }
 
-      let arr_idx_2: number | undefined = undefined;
+      let arrIdx2: number | undefined = undefined;
       if (literals.length === 3) {
-        arr_idx_2 = parseInt(literals[2].slice(0, -1));
+        arrIdx2 = parseInt(literals[2].slice(0, -1));
       }
 
-      switch (arr_name) {
+      switch (arrName) {
         case 'width':
           fbWidth = +it.string_value;
           break;
@@ -179,28 +177,28 @@ class BinLayoutInfo {
           break;
         case 'binCoordinates': {
           const [x0, y0, x1, y1] = extractNumbers(it.string_value);
-          binCoordinates[arr_idx!] = Rect2D.fromPoints(
+          binCoordinates[arrIdx!] = Rect2D.fromPoints(
             {x: x0, y: y0},
             {x: x1, y: y1},
           );
           break;
         }
         case 'perViewFDMScale': {
-          if (arr_idx_2 === 0) {
-            perViewFDMScale[arr_idx!] = [];
+          if (arrIdx2 === 0) {
+            perViewFDMScale[arrIdx!] = [];
           }
 
           const [width, height] = extractNumbers(it.string_value);
-          perViewFDMScale[arr_idx!][arr_idx_2!] = {width, height};
+          perViewFDMScale[arrIdx!][arrIdx2!] = {width, height};
           break;
         }
         case 'perViewBinOffset':
           const [x, y] = extractNumbers(it.string_value);
-          perViewBinOffset[arr_idx!] = {x, y};
+          perViewBinOffset[arrIdx!] = {x, y};
           break;
         case 'viewports': {
           const [x0, y0, x1, y1] = extractNumbers(it.string_value);
-          viewports[arr_idx!] = Rect2D.fromPoints(
+          viewports[arrIdx!] = Rect2D.fromPoints(
             {x: x0, y: y0},
             {x: x1, y: y1},
           );
@@ -208,10 +206,7 @@ class BinLayoutInfo {
         }
         case 'scissors': {
           const [x0, y0, x1, y1] = extractNumbers(it.string_value);
-          scissors[arr_idx!] = Rect2D.fromPoints(
-            {x: x0, y: y0},
-            {x: x1, y: y1},
-          );
+          scissors[arrIdx!] = Rect2D.fromPoints({x: x0, y: y0}, {x: x1, y: y1});
           break;
         }
       }
@@ -250,8 +245,8 @@ class BinLayoutInfo {
   }
 
   private getBinnedArea(viewIdx: number): Size2D {
-    let max_x = 0;
-    let max_y = 0;
+    let maxX = 0;
+    let maxY = 0;
 
     for (let i = 0; i < this.binCoordinates.length; i++) {
       const coords = this.binCoordinates[i];
@@ -262,12 +257,12 @@ class BinLayoutInfo {
        */
       if (!fdmScaleIsNon0x0(scale)) continue;
 
-      if (coords.right > max_x) max_x = coords.right;
+      if (coords.right > maxX) maxX = coords.right;
 
-      if (coords.bottom > max_y) max_y = coords.bottom;
+      if (coords.bottom > maxY) maxY = coords.bottom;
     }
 
-    return {width: max_x, height: max_y};
+    return {width: maxX, height: maxY};
   }
 
   public getBinningProperties(
@@ -369,10 +364,10 @@ class BinLayoutInfo {
     }
 
     /* Accounting for VK_QCOM_multiview_per_view_viewports. */
-    const vp_sc_idx = this.viewports.length == 1 ? 0 : viewIdx;
+    const vpScIdx = this.viewports.length == 1 ? 0 : viewIdx;
 
-    const viewport = this.viewports[vp_sc_idx];
-    const scissor = this.scissors[vp_sc_idx];
+    const viewport = this.viewports[vpScIdx];
+    const scissor = this.scissors[vpScIdx];
 
     return {grid, viewIdx, framebuffer, viewport, scissor, bins};
   }
@@ -585,63 +580,63 @@ class BinningVisualization implements m.ClassComponent<BinLayoutGrid> {
       /* Bins */
       attrs.bins
         .map(BinningVisualization.binRectToVisualizationRect)
-        .map((v_rect) => {
-          const textColor = v_rect.textColor
-            ? v_rect.textColor
-            : BinningVisualization.getTextColor(v_rect.fill);
+        .map((vRect) => {
+          const textColor = vRect.textColor
+            ? vRect.textColor
+            : BinningVisualization.getTextColor(vRect.fill);
 
           return m(
             'g',
-            {transform: `translate(${v_rect.rect.x},${v_rect.rect.y})`},
+            {transform: `translate(${vRect.rect.x},${vRect.rect.y})`},
             [
               /* Tooltip */
-              v_rect.textCenter &&
+              vRect.textCenter &&
                 m(
                   'title',
                   [
-                    v_rect.textTopLeft,
-                    v_rect.textCenter,
-                    v_rect.textCenterSub,
+                    vRect.textTopLeft,
+                    vRect.textCenter,
+                    vRect.textCenterSub,
                   ].join('\n'),
                 ),
 
               /* Rectangle */
               m('rect', {
-                width: v_rect.rect.width,
-                height: v_rect.rect.height,
-                fill: v_rect.fill,
+                width: vRect.rect.width,
+                height: vRect.rect.height,
+                fill: vRect.fill,
                 stroke: '#000',
               }),
 
               /* Centered text */
-              v_rect.textCenter &&
+              vRect.textCenter &&
                 m(
                   'text.label',
                   {
-                    ...rect2DRelativeCenter(v_rect.rect),
+                    ...rect2DRelativeCenter(vRect.rect),
                     'dominant-baseline': 'middle',
                     'text-anchor': 'middle',
                     'font-size': '1.5em',
                     'fill': textColor,
                   },
-                  v_rect.textCenter,
+                  vRect.textCenter,
                 ),
               /* Centered sub-text */
-              v_rect.textCenterSub &&
+              vRect.textCenterSub &&
                 m(
                   'text.label',
                   {
-                    ...rect2DRelativeCenter(v_rect.rect),
+                    ...rect2DRelativeCenter(vRect.rect),
                     'dy': '1.5em',
                     'dominant-baseline': 'middle',
                     'text-anchor': 'middle',
                     'fill': textColor,
                   },
-                  v_rect.textCenterSub,
+                  vRect.textCenterSub,
                 ),
 
               /* Top‑left text */
-              v_rect.textTopLeft &&
+              vRect.textTopLeft &&
                 m(
                   'text.label',
                   {
@@ -650,7 +645,7 @@ class BinningVisualization implements m.ClassComponent<BinLayoutGrid> {
                     'dominant-baseline': 'hanging',
                     'fill': textColor,
                   },
-                  v_rect.textTopLeft,
+                  vRect.textTopLeft,
                 ),
             ],
           );
@@ -785,7 +780,7 @@ export class BinLayoutSliceDetailsPanel implements TrackEventDetailsPanel {
 
   constructor(
     private readonly trace: Trace,
-    private layout_info: BinLayoutInfo | null = null,
+    private layoutInfo: BinLayoutInfo | null = null,
   ) {}
 
   async load(selection: TrackEventSelection): Promise<void> {
@@ -795,18 +790,18 @@ export class BinLayoutSliceDetailsPanel implements TrackEventDetailsPanel {
 
     return BinLayoutInfo.fromSliceId(this.trace, this.slice_id).then(
       (layout) => {
-        this.layout_info = layout;
+        this.layoutInfo = layout;
         return;
       },
     );
   }
 
   render() {
-    if (this.layout_info === null) {
+    if (this.layoutInfo === null) {
       return m(DetailsShell, {title: 'Bin Layout'}, 'Loading...');
     }
 
-    const info = this.layout_info;
+    const info = this.layoutInfo;
     const views = info.viewCount > 1 ? [0, 1] : [0];
 
     const gridTemplateColumns = '1fr '.repeat(views.length) + 'auto';
