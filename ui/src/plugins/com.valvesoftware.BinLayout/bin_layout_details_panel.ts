@@ -322,9 +322,8 @@ class BinLayoutInfo {
       bins.push({rect, scale});
     }
 
-    const binOffset = this.perViewBinOffset
-      ? this.perViewBinOffset[viewIdx]
-      : null;
+    const binOffset =
+      this.perViewBinOffset.length > 0 ? this.perViewBinOffset[viewIdx] : null;
     if (binOffset) {
       for (let col = 0; col < gridArea.width / this.binSize.width; col++) {
         bins.push({
