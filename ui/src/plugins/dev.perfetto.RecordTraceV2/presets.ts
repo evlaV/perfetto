@@ -339,6 +339,35 @@ export const LINUX_PRESETS: Preset[] = [
       },
     },
   },
+  {
+    id: 'frame',
+    title: 'Steam Frame',
+    subtitle: 'Steam Frame System Profile',
+    icon: 'head_mounted_device',
+    session: {
+      kind: 'probes',
+      mode: 'STOP_WHEN_FULL',
+      bufSizeKb: 256 * 1024,
+      durationMs: 10_000,
+      maxFileSizeMb: 1000,
+      fileWritePeriodMs: 2500,
+      compression: false,
+      probes: {
+        cpu_usage: {settings: {pollMs: 1000}},
+        cpu_sched: {settings: {}},
+        cpu_freq: {settings: {pollMs: 1000}},
+        process_stats: {settings: {pollMs: 1000}},
+        sys_stats: {settings: {pollMs: 1000}},
+        gpu_frequency: {settings: {}},
+        gpu_memory: {settings: {}},
+        gpu_renderstages: {settings: {}},
+        gpu_mali_counters: {settings: {}},
+        gpu_vis_events: {settings: {}},
+        power_voltages: {settings: {}},
+        mem_proc_stat: {settings: {pollMs: 1000}},
+      },
+    },
+  },
 ];
 
 // Legacy export for backward compatibility
