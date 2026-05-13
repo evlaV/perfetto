@@ -72,7 +72,7 @@ function atrace(): RecordProbe {
     image: 'rec_atrace.png',
     description:
       'Enables C++ / Java codebase annotations (ATRACE_BEGIN() / os.Trace())',
-    supportedPlatforms: ['ANDROID'],
+    supportedPlatforms: ['ANDROID', 'LINUX'],
     settings,
     genConfig: function (tc: TraceConfigBuilder) {
       tc.addAtraceCategories(...settings.categories.selectedValues());
@@ -117,7 +117,7 @@ function logcat(): RecordProbe {
     description:
       'Streams the event log into the trace. If no buffer filter is ' +
       'specified, all buffers are selected.',
-    supportedPlatforms: ['ANDROID'],
+    supportedPlatforms: ['ANDROID', 'LINUX'],
     settings,
     genConfig: function (tc: TraceConfigBuilder) {
       const logIds = settings.buffers.selectedValues();

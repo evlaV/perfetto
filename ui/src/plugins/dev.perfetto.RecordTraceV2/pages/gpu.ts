@@ -29,6 +29,7 @@ export function gpuRecordSection(): RecordSubpage {
       gpuRenderStages(),
       gpuMaliCounters(),
       gpuMaliFenceEvents(),
+      gpuVisEvents(),
     ],
   };
 }
@@ -54,9 +55,10 @@ function gpuMemory(): RecordProbe {
     description:
       'Allows to track per process and global total GPU memory usages. ' +
       '(Available on recent Android 12+ kernels)',
-    supportedPlatforms: ['ANDROID'],
+    supportedPlatforms: ['ANDROID', 'LINUX'],
     genConfig: function (tc: TraceConfigBuilder) {
       tc.addDataSource('android.gpu.memory');
+      tc.addDataSource('gpu.memory.msm');
       tc.addFtraceEvents('gpu_mem/gpu_mem_total');
     },
   };
@@ -85,9 +87,11 @@ function gpuRenderStages(): RecordProbe {
       '```adb shell getprop graphics.gpu.profiler.support```' +
       'To enable the event producer, run:' +
       '```adb shell setprop debug.graphics.gpu.profiler.perfetto 1```',
-    supportedPlatforms: ['ANDROID'],
+    supportedPlatforms: ['ANDROID', 'LINUX'],
     genConfig: function (tc: TraceConfigBuilder) {
       tc.addDataSource('gpu.renderstages', 'default');
+      tc.addDataSource('gpu.renderstages.msm', 'default');
+      tc.addFtraceEvents('drm/drm_vblank_event');
     },
   };
 }
@@ -99,7 +103,7 @@ function gpuMaliCounters(): RecordProbe {
     description:
       'Records Mali GPU performance counters (Available on Valhall+).' +
       'To enable the event producer, run: ```adb shell gpu_counter_producer```',
-    supportedPlatforms: ['ANDROID'],
+    supportedPlatforms: ['ANDROID', 'LINUX'],
     genConfig: function (tc: TraceConfigBuilder) {
       const cfg = tc.addDataSource('gpu.counters', 'default');
       cfg.gpuCounterConfig = {
@@ -136,6 +140,8 @@ function gpuMaliCounters(): RecordProbe {
           65668, 65671, 65672, 65673,
         ],
       };
+      const msmCfg = tc.addDataSource('gpu.counters.msm', 'default');
+      msmCfg.gpuCounterConfig = {counterPeriodNs: 100000};
     },
   };
 }
@@ -153,8 +159,29 @@ function gpuMaliFenceEvents(): RecordProbe {
           'mali/mali_KCPU_FENCE_SIGNAL',
           'mali/mali_KCPU_FENCE_WAIT_END',
           'mali/mali_KCPU_FENCE_WAIT_START',
+
+          // DMA fence events
+          'dma_fence/dma_fence_destroy',
+          'dma_fence/dma_fence_enable_signal',
+          'dma_fence/dma_fence_signaled',
+          'dma_fence/dma_fence_wait_start',
+          'dma_fence/dma_fence_emit',
+          'dma_fence/dma_fence_init',
+          'dma_fence/dma_fence_wait_end',
         ],
       };
+    },
+  };
+}
+
+function gpuVisEvents(): RecordProbe {
+  return {
+    id: 'gpu_vis_events',
+    title: 'GPUVis events',
+    description: 'Tracks GPUVis events via ftrace',
+    supportedPlatforms: ['LINUX'],
+    genConfig: function (tc: TraceConfigBuilder) {
+      tc.addFtraceEvents('ftrace/print', 'gpuvis', 'gpuvis/gpuvis_print');
     },
   };
 }
