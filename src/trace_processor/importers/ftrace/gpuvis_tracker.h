@@ -34,13 +34,11 @@ class GpuvisTracker {
   ~GpuvisTracker();
 
   bool TryParseGenericEvent(int64_t ts,
-                                uint32_t cpu,
-                                uint32_t tid,
-                                protozero::ConstBytes blob);
-
-  bool TryParsePrintEvent(int64_t ts,
+                            uint32_t cpu,
                             uint32_t tid,
-                            base::StringView event);
+                            protozero::ConstBytes blob);
+
+  bool TryParsePrintEvent(int64_t ts, uint32_t tid, base::StringView event);
 
  private:
   TraceProcessorContext* const context_;

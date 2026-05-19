@@ -72,12 +72,11 @@ static StringId GetSliceName(TraceProcessorContext* context,
   if (!sub_func) {
     return *func;
   }
-  std::string combined_name = context->storage->GetString(func).ToStdString() + "." +
-                              context->storage->GetString(sub_func).ToStdString();
+  std::string combined_name =
+      context->storage->GetString(func).ToStdString() + "." +
+      context->storage->GetString(sub_func).ToStdString();
   return context->storage->InternString(combined_name);
 }
-
-
 
 static std::pair<std::vector<std::pair<StringView, StringView>>, std::string>
 ExtractKeyValuePairs(const base::StringView str) {
@@ -285,27 +284,28 @@ bool GpuvisTracker::TryParsePrintEvent(int64_t ts,
       if (key == "begin_ctx" || key == "end_ctx" || key == "tgid")
         continue;
 
-      args->AddArg(
-        context_->storage->InternString(key),
-        Variadic::String(context_->storage->InternString(value))
-      );
+      args->AddArg(context_->storage->InternString(key),
+                   Variadic::String(context_->storage->InternString(value)));
     }
   };
 
   // If it has neither begin nor end, treat it as an instantaenous event
   if (!is_begin && !is_end) {
-    context_->slice_tracker->Scoped(ts, track_id, str_gpuvis_userspace_, slice_name, 0, slice_args);
+    context_->slice_tracker->Scoped(ts, track_id, str_gpuvis_userspace_,
+                                    slice_name, 0, slice_args);
   } else {
-    auto ongoing_slice = std::find(ongoing_slices_.begin(), ongoing_slices_.end(), *id);
+    auto ongoing_slice =
+        std::find(ongoing_slices_.begin(), ongoing_slices_.end(), *id);
     if (is_begin) {
       // Ignore begins that already have an ongoing slice
       if (ongoing_slice == ongoing_slices_.end()) {
-        context_->slice_tracker->Begin(ts, track_id, str_gpuvis_userspace_, slice_name, slice_args);
+        context_->slice_tracker->Begin(ts, track_id, str_gpuvis_userspace_,
+                                       slice_name, slice_args);
 
         // Record the ongoing slice.
         ongoing_slices_.emplace_back(*id);
       }
-    } else { // is_end
+    } else {  // is_end
       // Ignore ends that don't have an ongoing slice
       if (ongoing_slice != ongoing_slices_.end()) {
         // End the slice.
