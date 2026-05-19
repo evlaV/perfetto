@@ -883,7 +883,9 @@ export class BinLayoutSliceDetailsPanel implements TrackEventDetailsPanel {
    */
   private static async getVersion(t: Trace): Promise<FormatVersion> {
     const versionQuery = t.engine.query(`
-      SELECT EXISTS(SELECT 1 FROM args WHERE key='binInfo') AS value
+      SELECT EXISTS(
+        SELECT 1 FROM args WHERE key='binInfo' AND string_value!='binInfo'
+      ) AS value
     `);
 
     const row = (await versionQuery).firstRow({value: NUM});
