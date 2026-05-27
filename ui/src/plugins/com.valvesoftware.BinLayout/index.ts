@@ -22,6 +22,16 @@ export default class BinLayout implements PerfettoPlugin {
     trace: Trace,
     _args: {[key: string]: unknown},
   ): Promise<void> {
+    const versionQuery = trace.engine.query(`
+      SELECT EXISTS (
+        SELECT 1 FROM args WHERE key='tiledRender' AND string_value='true'
+      ) AS hasBinLayout
+    `);
+    const row = (await versionQuery).firstRow({hasBinLayout: NUM});
+    const hasBinLayout = Boolean(row.hasBinLayout);
+
+    if (!hasBinLayout) return;
+
     const uri = `com.valvesoftware.BinLayout#Track`;
     trace.tracks.registerTrack({
       uri,
