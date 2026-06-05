@@ -78,6 +78,10 @@ static StringId GetSliceName(TraceProcessorContext* context,
   return context->storage->InternString(combined_name);
 }
 
+static bool IsWhitespace(char c) {
+  return c == ' ' || c == '\t' || c == '\n' || c == '\r';
+}
+
 static std::pair<std::vector<std::pair<StringView, StringView>>, std::string>
 ExtractKeyValuePairs(const base::StringView str) {
   std::vector<std::pair<StringView, StringView>> key_values;
@@ -87,9 +91,10 @@ ExtractKeyValuePairs(const base::StringView str) {
 
   // Simple space-based tokenizer
   while (start < str.size()) {
-    size_t end = str.find(' ', start);
-    if (end == StringView::npos)
-      end = str.size();
+    size_t end = start;
+    while (end < str.size() && !IsWhitespace(str.data()[end])) {
+      end++;
+    }
 
     StringView token = str.substr(start, end - start);
     start = end + 1;  // skip the space
@@ -166,7 +171,7 @@ bool GpuvisTracker::TryParseGenericEvent(int64_t ts,
   }
 
   // Validate we have the essential fields.
-  if (!func || !ctx_op || !id || !tgid || *tgid == 0) {
+  if (!func || !ctx_op || !tgid || *tgid == 0) {
     return true;  // It's a gpuvis event, but malformed.
   }
 
@@ -175,6 +180,11 @@ bool GpuvisTracker::TryParseGenericEvent(int64_t ts,
   bool is_begin = ctx_op_str == "begin_ctx", is_end = ctx_op_str == "end_ctx";
   if (!is_begin && !is_end) {
     return true;  // Unknown ctx_op, ignore.
+  }
+
+  if (is_begin && !id) {
+    // Malformed
+    return true;
   }
 
   StringId slice_name = GetSliceName(context_, func, sub_func);
@@ -259,10 +269,22 @@ bool GpuvisTracker::TryParsePrintEvent(int64_t ts,
     }
   }
 
+  if (!tgid.has_value()) {
+    UniqueTid utid = context_->process_tracker->GetOrCreateThread(tid);
+    auto thread_rr = context_->storage->thread_table()[utid];
+    if (auto upid = thread_rr.upid(); upid.has_value()) {
+      tgid = context_->storage->process_table()[*upid].pid();
+    }
+  }
+
   // Validate essential fields.  If `begin_ctx` and `end_ctx` are both missing,
   // treat this as an instantaneous point.
   bool is_begin = ctx_op == "begin_ctx", is_end = ctx_op == "end_ctx";
   if (name.empty()) {
+    return true;  // It's a gpuvis print event, but malformed.
+  }
+
+  if (!id.has_value()) {
     return true;  // It's a gpuvis print event, but malformed.
   }
 
@@ -294,22 +316,23 @@ bool GpuvisTracker::TryParsePrintEvent(int64_t ts,
     context_->slice_tracker->Scoped(ts, track_id, str_gpuvis_userspace_,
                                     slice_name, 0, slice_args);
   } else {
-    auto ongoing_slice =
-        std::find(ongoing_slices_.begin(), ongoing_slices_.end(), *id);
+      auto ongoing_slice = ongoing_slices_.find(*id);
+      bool has_ongoing_slice = ongoing_slice != ongoing_slices_.end();
+
     if (is_begin) {
       // Ignore begins that already have an ongoing slice
-      if (ongoing_slice == ongoing_slices_.end()) {
+      if (!has_ongoing_slice) {
         context_->slice_tracker->Begin(ts, track_id, str_gpuvis_userspace_,
                                        slice_name, slice_args);
 
         // Record the ongoing slice.
-        ongoing_slices_.emplace_back(*id);
+        ongoing_slices_[*id] = track_id.value;
       }
     } else {  // is_end
       // Ignore ends that don't have an ongoing slice
-      if (ongoing_slice != ongoing_slices_.end()) {
+      if (has_ongoing_slice) {
         // End the slice.
-        context_->slice_tracker->End(ts, track_id);
+          context_->slice_tracker->End(ts, TrackId(ongoing_slice->second));
 
         // Remove from ongoing slices.
         ongoing_slices_.erase(ongoing_slice);

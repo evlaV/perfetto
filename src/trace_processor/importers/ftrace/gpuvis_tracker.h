@@ -17,7 +17,7 @@
 #ifndef SRC_TRACE_PROCESSOR_IMPORTERS_FTRACE_GPUVIS_TRACKER_H_
 #define SRC_TRACE_PROCESSOR_IMPORTERS_FTRACE_GPUVIS_TRACKER_H_
 
-#include <deque>
+#include <map>
 
 #include "perfetto/protozero/proto_decoder.h"
 
@@ -43,7 +43,7 @@ class GpuvisTracker {
  private:
   TraceProcessorContext* const context_;
 
-  std::deque<uint64_t> ongoing_slices_;
+  std::map<uint64_t, uint32_t> ongoing_slices_;
 
   const StringId str_tgid_;
   const StringId str_func_;
