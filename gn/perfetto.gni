@@ -313,6 +313,10 @@ declare_args() {
   # and the Android flag "use_lockfree_taskrunner" is used instead (see
   # perfetto_flags.aconfig)
   enable_perfetto_lockfree_taskrunner = true
+
+  # This flag will cause a stripped-down build of `traced_probes` for use in
+  # Lepton while a simultaneous `traced_probes` is run outside of Lepton.
+  perfetto_traced_probes_lepton = false
 }
 
 declare_args() {

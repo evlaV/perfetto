@@ -400,6 +400,17 @@ constexpr DataSourceTraits Ds() {
   return DataSourceTraits{&T::descriptor, &ProbesProducer::CreateDSInstance<T>};
 }
 
+#if PERFETTO_BUILDFLAG(PERFETTO_TRACED_PROBES_LEPTON)
+constexpr const DataSourceTraits kAllDataSources[] = {
+    Ds<AndroidAflagsDataSource>(),
+    Ds<AndroidGameInterventionListDataSource>(),
+    Ds<AndroidCpuPerUidDataSource>(),
+    Ds<AndroidKernelWakelocksDataSource>(),
+    Ds<AndroidLogDataSource>(),
+    Ds<AndroidPowerDataSource>(),
+    Ds<AndroidSystemPropertyDataSource>(),
+};
+#else
 constexpr const DataSourceTraits kAllDataSources[] = {
     Ds<AndroidAflagsDataSource>(),
     Ds<AndroidGameInterventionListDataSource>(),
@@ -424,6 +435,7 @@ constexpr const DataSourceTraits kAllDataSources[] = {
     Ds<SystemInfoDataSource>(),
     Ds<UserListDataSource>(),
 };
+#endif
 
 }  // namespace
 
