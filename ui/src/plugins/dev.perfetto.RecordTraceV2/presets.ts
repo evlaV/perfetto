@@ -373,7 +373,7 @@ export const LINUX_PRESETS: Preset[] = [
         gpu_frequency: {settings: {}},
         gpu_memory: {settings: {}},
         gpu_renderstages: {settings: {}},
-        gpu_mali_counters: {settings: {}},
+        gpu_mali_counters: {settings: {samplingFreq: 1000}},
         gpu_mali_fence_events: {settings: {}},
         gpu_vis_events: {settings: {}},
         power_voltages: {settings: {}},
