@@ -22,12 +22,20 @@ export function prefixWithHexLen(cmd: string) {
 }
 
 export function websocketInstructions(os?: 'ANDROID') {
+  os;
   return (
     'Instructions:\n' +
-    (os === 'ANDROID' ? 'adb start-server\n' : '') +
-    'curl -LO https://get.perfetto.dev/tracebox\n' +
-    'chmod +x ./tracebox\n' +
-    './tracebox websocket_bridge\n'
+    '\n' +
+    'On this PC run:\n' +
+    '\n' +
+    'ssh -L8037:localhost:8037 steamos@frame.local\n' +
+    '\n' +
+    'Then on your Steam Frame run:\n' +
+    '\n' +
+    'sudo steamos-readonly disable\n' +
+    'sudo pacman --noconfirm -S perfetto perfetto-android\n' +
+    '\n' +
+    'Keep that window open while recording.'
   );
 }
 
