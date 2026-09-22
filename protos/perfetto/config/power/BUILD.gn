@@ -15,5 +15,8 @@
 import("../../../../gn/proto_library.gni")
 
 perfetto_proto_library("@TYPE@") {
-  sources = [ "android_power_config.proto" ]
+  sources = [
+    "android_power_config.proto",
+    "linux_power_sysfs_config.proto",
+  ]
 }

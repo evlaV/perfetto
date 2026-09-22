@@ -8204,6 +8204,7 @@ perfetto_proto_library(
     name = "protos_perfetto_config_power_protos",
     srcs = [
         "protos/perfetto/config/power/android_power_config.proto",
+        "protos/perfetto/config/power/linux_power_sysfs_config.proto",
     ],
     visibility = [
         PERFETTO_CONFIG.proto_library_visibility,

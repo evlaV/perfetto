@@ -24,7 +24,7 @@ export function powerRecordSection(): RecordSubpage {
     title: 'Power',
     subtitle: 'Battery and other energy counters',
     icon: 'battery_charging_full',
-    probes: [powerRails(), powerVoltages()],
+    probes: [powerRails(), powerVoltages(), steamFramePower()],
   };
 }
 
@@ -52,6 +52,26 @@ function powerRails(): RecordProbe {
           protos.AndroidPowerConfig.BatteryCounters.BATTERY_COUNTER_CHARGE,
           protos.AndroidPowerConfig.BatteryCounters.BATTERY_COUNTER_CURRENT,
         ],
+      };
+    },
+  };
+}
+
+function steamFramePower(): RecordProbe {
+  const LINUX_POWER_SYSFS_DS = 'linux.sysfs_power';
+  const settings = {pollMs: new Slider(POLL_INTERVAL_SLIDER)};
+  return {
+    id: 'steam_frame_power',
+    image: 'rec_battery_counters.png',
+    title: 'Steam Frame power & battery',
+    description:
+      'Polls the battery charge reported by the charging daemon and the ' +
+      "instantaneous power draw of the device's power rails.",
+    supportedPlatforms: ['LINUX'],
+    settings,
+    genConfig: function (tc: TraceConfigBuilder) {
+      tc.addDataSource(LINUX_POWER_SYSFS_DS).linuxPowerSysfsConfig = {
+        pollMs: settings.pollMs.value,
       };
     },
   };

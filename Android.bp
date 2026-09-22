@@ -1740,6 +1740,7 @@ filegroup {
         "protos/perfetto/config/interceptors/console_config.proto",
         "protos/perfetto/config/linux/journald_config.proto",
         "protos/perfetto/config/power/android_power_config.proto",
+        "protos/perfetto/config/power/linux_power_sysfs_config.proto",
         "protos/perfetto/config/priority_boost/priority_boost_config.proto",
         "protos/perfetto/config/process_stats/process_stats_config.proto",
         "protos/perfetto/config/profiling/heapprofd_config.proto",
@@ -1820,6 +1821,7 @@ java_library {
         "protos/perfetto/config/interceptors/console_config.proto",
         "protos/perfetto/config/linux/journald_config.proto",
         "protos/perfetto/config/power/android_power_config.proto",
+        "protos/perfetto/config/power/linux_power_sysfs_config.proto",
         "protos/perfetto/config/priority_boost/priority_boost_config.proto",
         "protos/perfetto/config/process_stats/process_stats_config.proto",
         "protos/perfetto/config/profiling/heapprofd_config.proto",
@@ -3552,6 +3554,7 @@ filegroup {
         "protos/perfetto/config/interceptors/console_config.proto",
         "protos/perfetto/config/linux/journald_config.proto",
         "protos/perfetto/config/power/android_power_config.proto",
+        "protos/perfetto/config/power/linux_power_sysfs_config.proto",
         "protos/perfetto/config/priority_boost/priority_boost_config.proto",
         "protos/perfetto/config/process_stats/process_stats_config.proto",
         "protos/perfetto/config/profiling/heapprofd_config.proto",
@@ -4774,6 +4777,7 @@ genrule {
         "protos/perfetto/config/interceptors/console_config.proto",
         "protos/perfetto/config/linux/journald_config.proto",
         "protos/perfetto/config/power/android_power_config.proto",
+        "protos/perfetto/config/power/linux_power_sysfs_config.proto",
         "protos/perfetto/config/priority_boost/priority_boost_config.proto",
         "protos/perfetto/config/process_stats/process_stats_config.proto",
         "protos/perfetto/config/profiling/heapprofd_config.proto",
@@ -5605,6 +5609,7 @@ filegroup {
     name: "perfetto_protos_perfetto_config_power_cpp",
     srcs: [
         "protos/perfetto/config/power/android_power_config.proto",
+        "protos/perfetto/config/power/linux_power_sysfs_config.proto",
     ],
 }
 
@@ -5621,6 +5626,7 @@ genrule {
     cmd: "mkdir -p $(genDir)/external/perfetto/ && $(location aprotoc) --proto_path=external/perfetto --plugin=protoc-gen-plugin=$(location perfetto_src_protozero_protoc_plugin_cppgen_plugin) --plugin_out=wrapper_namespace=gen:$(genDir)/external/perfetto/ $(locations :perfetto_protos_perfetto_config_power_cpp)",
     out: [
         "external/perfetto/protos/perfetto/config/power/android_power_config.gen.cc",
+        "external/perfetto/protos/perfetto/config/power/linux_power_sysfs_config.gen.cc",
     ],
 }
 
@@ -5637,6 +5643,7 @@ genrule {
     cmd: "mkdir -p $(genDir)/external/perfetto/ && $(location aprotoc) --proto_path=external/perfetto --plugin=protoc-gen-plugin=$(location perfetto_src_protozero_protoc_plugin_cppgen_plugin) --plugin_out=wrapper_namespace=gen:$(genDir)/external/perfetto/ $(locations :perfetto_protos_perfetto_config_power_cpp)",
     out: [
         "external/perfetto/protos/perfetto/config/power/android_power_config.gen.h",
+        "external/perfetto/protos/perfetto/config/power/linux_power_sysfs_config.gen.h",
     ],
     export_include_dirs: [
         ".",
@@ -5649,6 +5656,7 @@ filegroup {
     name: "perfetto_protos_perfetto_config_power_lite",
     srcs: [
         "protos/perfetto/config/power/android_power_config.proto",
+        "protos/perfetto/config/power/linux_power_sysfs_config.proto",
     ],
 }
 
@@ -5664,6 +5672,7 @@ genrule {
     cmd: "mkdir -p $(genDir)/external/perfetto/ && $(location aprotoc) --proto_path=external/perfetto --cpp_out=lite=true:$(genDir)/external/perfetto/ $(locations :perfetto_protos_perfetto_config_power_lite)",
     out: [
         "external/perfetto/protos/perfetto/config/power/android_power_config.pb.cc",
+        "external/perfetto/protos/perfetto/config/power/linux_power_sysfs_config.pb.cc",
     ],
 }
 
@@ -5679,6 +5688,7 @@ genrule {
     cmd: "mkdir -p $(genDir)/external/perfetto/ && $(location aprotoc) --proto_path=external/perfetto --cpp_out=lite=true:$(genDir)/external/perfetto/ $(locations :perfetto_protos_perfetto_config_power_lite)",
     out: [
         "external/perfetto/protos/perfetto/config/power/android_power_config.pb.h",
+        "external/perfetto/protos/perfetto/config/power/linux_power_sysfs_config.pb.h",
     ],
     export_include_dirs: [
         ".",
@@ -5691,6 +5701,7 @@ filegroup {
     name: "perfetto_protos_perfetto_config_power_zero",
     srcs: [
         "protos/perfetto/config/power/android_power_config.proto",
+        "protos/perfetto/config/power/linux_power_sysfs_config.proto",
     ],
 }
 
@@ -5707,6 +5718,7 @@ genrule {
     cmd: "mkdir -p $(genDir)/external/perfetto/ && $(location aprotoc) --proto_path=external/perfetto --plugin=protoc-gen-plugin=$(location protozero_plugin) --plugin_out=wrapper_namespace=pbzero:$(genDir)/external/perfetto/ $(locations :perfetto_protos_perfetto_config_power_zero)",
     out: [
         "external/perfetto/protos/perfetto/config/power/android_power_config.pbzero.cc",
+        "external/perfetto/protos/perfetto/config/power/linux_power_sysfs_config.pbzero.cc",
     ],
 }
 
@@ -5723,6 +5735,7 @@ genrule {
     cmd: "mkdir -p $(genDir)/external/perfetto/ && $(location aprotoc) --proto_path=external/perfetto --plugin=protoc-gen-plugin=$(location protozero_plugin) --plugin_out=wrapper_namespace=pbzero:$(genDir)/external/perfetto/ $(locations :perfetto_protos_perfetto_config_power_zero)",
     out: [
         "external/perfetto/protos/perfetto/config/power/android_power_config.pbzero.h",
+        "external/perfetto/protos/perfetto/config/power/linux_power_sysfs_config.pbzero.h",
     ],
     export_include_dirs: [
         ".",
@@ -8386,6 +8399,7 @@ genrule {
         "protos/perfetto/config/interceptors/console_config.proto",
         "protos/perfetto/config/linux/journald_config.proto",
         "protos/perfetto/config/power/android_power_config.proto",
+        "protos/perfetto/config/power/linux_power_sysfs_config.proto",
         "protos/perfetto/config/priority_boost/priority_boost_config.proto",
         "protos/perfetto/config/process_stats/process_stats_config.proto",
         "protos/perfetto/config/profiling/heapprofd_config.proto",
@@ -11300,6 +11314,7 @@ filegroup {
         "protos/perfetto/config/interceptors/console_config.proto",
         "protos/perfetto/config/linux/journald_config.proto",
         "protos/perfetto/config/power/android_power_config.proto",
+        "protos/perfetto/config/power/linux_power_sysfs_config.proto",
         "protos/perfetto/config/priority_boost/priority_boost_config.proto",
         "protos/perfetto/config/process_stats/process_stats_config.proto",
         "protos/perfetto/config/profiling/heapprofd_config.proto",
@@ -13692,6 +13707,7 @@ genrule {
         "protos/perfetto/config/interceptors/console_config.proto",
         "protos/perfetto/config/linux/journald_config.proto",
         "protos/perfetto/config/power/android_power_config.proto",
+        "protos/perfetto/config/power/linux_power_sysfs_config.proto",
         "protos/perfetto/config/priority_boost/priority_boost_config.proto",
         "protos/perfetto/config/process_stats/process_stats_config.proto",
         "protos/perfetto/config/profiling/heapprofd_config.proto",
@@ -22903,6 +22919,7 @@ java_library {
         "protos/perfetto/config/interceptors/console_config.proto",
         "protos/perfetto/config/linux/journald_config.proto",
         "protos/perfetto/config/power/android_power_config.proto",
+        "protos/perfetto/config/power/linux_power_sysfs_config.proto",
         "protos/perfetto/config/priority_boost/priority_boost_config.proto",
         "protos/perfetto/config/process_stats/process_stats_config.proto",
         "protos/perfetto/config/profiling/heapprofd_config.proto",
@@ -23376,6 +23393,7 @@ python_library_host {
         "protos/perfetto/config/interceptors/console_config.proto",
         "protos/perfetto/config/linux/journald_config.proto",
         "protos/perfetto/config/power/android_power_config.proto",
+        "protos/perfetto/config/power/linux_power_sysfs_config.proto",
         "protos/perfetto/config/priority_boost/priority_boost_config.proto",
         "protos/perfetto/config/process_stats/process_stats_config.proto",
         "protos/perfetto/config/profiling/heapprofd_config.proto",
